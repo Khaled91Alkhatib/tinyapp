@@ -11,10 +11,10 @@ const urlDatabase = {
 
 app.get("/urls", (req, res) => {
   const templateVars = {urls: urlDatabase};
-  res.render("urls_index", templateVars);
+  res.render("urls_index", templateVars);  // render will respond to requests by sending back a template
 });
 
-app.get("/urls/:shortURL", (req, res) => {  // The ":" indicates that shortURL is a route parameter
+app.get("/urls/:shortURL", (req, res) => {  // the ":" indicates that shortURL is a route parameter
   const templateVars = {shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]};
   res.render("urls_show", templateVars);
 })
