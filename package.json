@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/Khaled91Alkhatib/tinyapp/issues"
   },
-  "homepage": "https://github.com/Khaled91Alkhatib/tinyapp#readme"
+  "homepage": "https://github.com/Khaled91Alkhatib/tinyapp#readme",
+  "dependencies": {
+    "express": "^4.17.3"
+  }
 }
