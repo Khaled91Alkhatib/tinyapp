@@ -12,6 +12,12 @@ const urlDatabase = {
   "9sm5xk": "http://www.google.com",
 };
 
+function generateRandomString() {
+  let newString = Math.random().toString(36).substring(2, 8);  // the 36 represents base 36; includes all letters and numbers 0123456789
+  return newString;
+}
+generateRandomString();
+
 app.get("/urls", (req, res) => {
   const templateVars = {urls: urlDatabase};
   res.render("urls_index", templateVars);  // render will respond to requests by sending back a template
