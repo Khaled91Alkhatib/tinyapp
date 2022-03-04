@@ -1,6 +1,9 @@
+const bodyParser = require("body-parser"); // body=parser makes data sent as a buffer to be readable
 const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
+
+app.use(bodyParser.urlencoded({extended: true}));
 
 app.set("view engine", "ejs");
 
@@ -14,9 +17,18 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);  // render will respond to requests by sending back a template
 });
 
+app.get("/urls/new", (req, res) => {
+  res.render("urls_new");
+});
+
 app.get("/urls/:shortURL", (req, res) => {  // the ":" indicates that shortURL is a route parameter
   const templateVars = {shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]};
   res.render("urls_show", templateVars);
+})
+
+app.post("/urls", (req, res) => {  // add a post route to recieve the form submissions
+  console.log(req.body);
+  res.send("OK");
 })
 
 app.get("/", (req, res) => {
