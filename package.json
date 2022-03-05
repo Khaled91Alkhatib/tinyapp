@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "start": "./node_modules/.bin/nodemon -L express_server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -11,14 +12,18 @@
     "url": "git+https://github.com/Khaled91Alkhatib/tinyapp.git"
   },
   "keywords": [],
-  "author": "",
+  "author": "Khaled Alkhatib (github - Khaled91Alkhatib)",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/Khaled91Alkhatib/tinyapp/issues"
   },
   "homepage": "https://github.com/Khaled91Alkhatib/tinyapp#readme",
   "dependencies": {
+    "body-parser": "^1.19.2",
     "ejs": "^3.1.6",
     "express": "^4.17.3"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.15"
   }
 }
