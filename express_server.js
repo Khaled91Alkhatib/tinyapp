@@ -40,7 +40,7 @@ app.post("/urls", (req, res) => {  // add a post route to receive the form submi
 app.get("/u/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
   const longURL = urlDatabase[shortURL];
-  if (urlDatabase[shortURL]) {  // check for proper/existent shortURL
+  if (urlDatabase[shortURL]) {  // check for proper/existent shortURL (edge case)
     res.redirect(longURL);
   } else {
     res.send("Invalid input!");
@@ -50,6 +50,13 @@ app.get("/u/:shortURL", (req, res) => {
 app.post("/urls/:shortURL/delete", (req, res) => {
   const shortURL = req.params.shortURL;
   delete urlDatabase[shortURL];
+  res.redirect("/urls");
+});
+
+app.post("/urls/:id", (req, res) => {  // modifies URL
+  const newLongURL = req.body.newLongURL;
+  const id = req.params.id;
+  urlDatabase[id] = newLongURL;
   res.redirect("/urls");
 });
 
