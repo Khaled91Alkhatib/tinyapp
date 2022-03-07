@@ -70,7 +70,7 @@ app.post("/login", (req, res) => {
 
 app.post("/logout", (req, res) => {
   const username = req.body["username"];
-res.clearCookie("username", username);
+  res.clearCookie("username", username);
   res.redirect("/urls");
 });
 
