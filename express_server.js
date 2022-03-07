@@ -13,14 +13,14 @@ const urlDatabase = {
   "9sm5xk": "http://www.google.com",
 };
 
-const users = { 
+const users = {
   "userRandomID": {
-    id: "userRandomID", 
-    email: "user@example.com", 
+    id: "userRandomID",
+    email: "user@example.com",
     password: "purple-monkey-dinosaur"
   },
- "user2RandomID": {
-    id: "user2RandomID", 
+  "user2RandomID": {
+    id: "user2RandomID",
     email: "user2@example.com",
     password: "dishwasher-funk"
   }
@@ -76,7 +76,7 @@ app.post("/urls/:id", (req, res) => {  // modifies URL
 
 app.post("/login", (req, res) => {
   const username = req.body["username"];
-  res.cookie("username", username); 
+  res.cookie("username", username);
   res.redirect("/urls");
 });
 
@@ -98,9 +98,16 @@ app.post("/register", (req, res) => {
   const newUser = {
     [newUserID]: {
       id: newUserID,
-      email: req.body.email, 
+      email: req.body.email,
       password: req.body.password
-    }  
+    }
+  };
+  for (const key in users) {
+    if (users[key].email === newUser[newUserID].email) {
+      res.send("400 Bad Request");
+    } else if (newUser[newUserID].email === "" || newUser[newUserID].password === "") {
+      res.send("400 Bad Request");
+    }
   }
   Object.assign(users, newUser);
   res.cookie("user_id", newUserID);
