@@ -80,6 +80,13 @@ app.post("/login", (req, res) => {
   res.redirect("/urls");
 });
 
+app.get("/login", (req, res) => {
+  const user_id = req.cookies["user_id"];
+  const user = users[user_id];
+  const templateVars = {userKey: user};
+  res.render("urls_login", templateVars);
+});
+
 app.post("/logout", (req, res) => {
   // const username = req.body["username"];
   res.clearCookie("user_id");
