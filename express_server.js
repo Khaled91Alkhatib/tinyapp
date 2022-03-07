@@ -13,23 +13,35 @@ const urlDatabase = {
   "9sm5xk": "http://www.google.com",
 };
 
+const users = { 
+  "userRandomID": {
+    id: "userRandomID", 
+    email: "user@example.com", 
+    password: "purple-monkey-dinosaur"
+  },
+ "user2RandomID": {
+    id: "user2RandomID", 
+    email: "user2@example.com",
+    password: "dishwasher-funk"
+  }
+};
+
 const generateRandomString = function() {
   let newString = Math.random().toString(36).substring(2, 8);  // the 36 represents base 36; includes all letters and numbers 0123456789
   return newString;
 };
 
-app.get("/urls", (req, res) => {
-  const templateVars = {urls: urlDatabase, username: req.cookies["username"]};
-  res.render("urls_index", templateVars);  // render will respond to requests by sending back a template
-});
-
 app.get("/urls/new", (req, res) => {
-  const templateVars = {urls: urlDatabase, username: req.cookies["username"]};
+  const user_id = req.cookies["user_id"];
+  const user = users[user_id];
+  const templateVars = {urls: urlDatabase, userKey: user};
   res.render("urls_new", templateVars);
 });
 
 app.get("/urls/:shortURL", (req, res) => {  // the ":" indicates that shortURL is a route parameter
-  const templateVars = {shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], username: req.cookies["username"]};
+  const user_id = req.cookies["user_id"];
+  const user = users[user_id];
+  const templateVars = {shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], userKey: user};
   res.render("urls_show", templateVars);
 });
 
@@ -69,14 +81,37 @@ app.post("/login", (req, res) => {
 });
 
 app.post("/logout", (req, res) => {
-  const username = req.body["username"];
-  res.clearCookie("username", username);
+  // const username = req.body["username"];
+  res.clearCookie("user_id");
   res.redirect("/urls");
 });
 
 app.get("/register", (req, res) => {
-  const templateVars = {username: req.cookies["username"]};
+  const user_id = req.cookies["user_id"];
+  const user = users[user_id];
+  const templateVars = {userKey: user};
   res.render("urls_registration", templateVars);
+});
+
+app.post("/register", (req, res) => {
+  const newUserID = generateRandomString();
+  const newUser = {
+    [newUserID]: {
+      id: newUserID,
+      email: req.body.email, 
+      password: req.body.password
+    }  
+  }
+  Object.assign(users, newUser);
+  res.cookie("user_id", newUserID);
+  res.redirect("/urls");
+});
+
+app.get("/urls", (req, res) => {
+  const user_id = req.cookies["user_id"];
+  const user = users[user_id];
+  const templateVars = {urls: urlDatabase, userKey: user};
+  res.render("urls_index", templateVars);  // render will respond to requests by sending back a template
 });
 
 app.get("/", (req, res) => {
