@@ -64,9 +64,13 @@ app.get("/urls", (req, res) => {
 
 app.get("/urls/new", (req, res) => {
   const user_id = req.cookies["user_id"];
-  const user = users[user_id];
-  const templateVars = {urls: urlDatabase, userKey: user};
-  res.render("urls_new", templateVars);
+  if (user_id) {
+    const user = users[user_id];
+    const templateVars = {urls: urlDatabase, userKey: user};  
+    res.render("urls_new", templateVars);
+  } else {
+    res.redirect("/login");
+  }
 });
 
 app.get("/urls/:shortURL", (req, res) => {  // the ":" indicates that shortURL is a route parameter
@@ -103,9 +107,14 @@ app.get("/login", (req, res) => {
 
 // POST requests
 app.post("/urls", (req, res) => {  // add a post route to receive the form submissions
-  const newShorturl = generateRandomString();
-  urlDatabase[newShorturl] = req.body.longURL; // assign new key and key value
-  res.redirect(`/urls/${newShorturl}`);
+  const user_id = req.cookies["user_id"];
+  if(user_id){
+    const newShorturl = generateRandomString();
+    urlDatabase[newShorturl] = req.body.longURL; // assign new key and key value
+    res.redirect(`/urls/${newShorturl}`);
+  } else {
+    res.send("You have to login first");
+  }
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
