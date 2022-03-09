@@ -11,8 +11,14 @@ app.set("view engine", "ejs");
 
 // Global variables
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xk": "http://www.google.com",
+  "b6UTxQ": {
+    longURL: "http://www.lighthouselabs.ca",
+    userID: "aJ48lW"
+  },
+  "i3BoGr": {
+    longURL: "http://www.google.com",
+    userID: "aJ48lW"
+  }
 };
 
 const users = {
@@ -66,7 +72,7 @@ app.get("/urls/new", (req, res) => {
   const user_id = req.cookies["user_id"];
   if (user_id) {
     const user = users[user_id];
-    const templateVars = {urls: urlDatabase, userKey: user};  
+    const templateVars = {urls: urlDatabase, userKey: user};
     res.render("urls_new", templateVars);
   } else {
     res.redirect("/login");
@@ -76,17 +82,17 @@ app.get("/urls/new", (req, res) => {
 app.get("/urls/:shortURL", (req, res) => {  // the ":" indicates that shortURL is a route parameter
   const user_id = req.cookies["user_id"];
   const user = users[user_id];
-  const templateVars = {shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], userKey: user};
+  const templateVars = {shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL, userKey: user};
   res.render("urls_show", templateVars);
 });
 
 app.get("/u/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
-  const longURL = urlDatabase[shortURL];
-  if (urlDatabase[shortURL]) {  // check for proper/existent shortURL (edge case)
-    res.redirect(longURL);
-  } else {
+  const urlObject = urlDatabase[shortURL];
+  if (!urlDatabase[shortURL]) {  // check for proper/existent shortURL (edge case)
     res.send("Invalid input!");
+  } else {
+    res.redirect(urlObject.longURL);
   }
 });
 
@@ -108,9 +114,12 @@ app.get("/login", (req, res) => {
 // POST requests
 app.post("/urls", (req, res) => {  // add a post route to receive the form submissions
   const user_id = req.cookies["user_id"];
-  if(user_id){
-    const newShorturl = generateRandomString();
-    urlDatabase[newShorturl] = req.body.longURL; // assign new key and key value
+  const newShorturl = generateRandomString();
+  urlDatabase[newShorturl] = {  // assign new key and key value
+    longURL: req.body.longURL,
+    userID: user_id
+  };
+  if (user_id) {
     res.redirect(`/urls/${newShorturl}`);
   } else {
     res.send("You have to login first");
@@ -126,7 +135,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 app.post("/urls/:id", (req, res) => {  // modifies URL
   const newLongURL = req.body.newLongURL;
   const id = req.params.id;
-  urlDatabase[id] = newLongURL;
+  urlDatabase[id].longURL = newLongURL;
   res.redirect("/urls");
 });
 
