@@ -59,13 +59,40 @@ const authenticateUser = function(email, password, users) {  // helper function 
   }
 };
 
+const urlsForUser = function (id, uDb) { // uDb represents the database with the data already in it
+  const newObj = {};
+  for (const k in uDb) {
+    if (id === uDb[k].userID) {
+      newObj[k] = {
+        longURL: uDb[k].longURL,
+        userID: uDb[k].userID
+      }
+    }
+  }
+  return newObj;
+}
+
+const findUserByShortUrl = function (id, uDb) {
+  for (const k in uDb) {
+    if (id === uDb[k].userID) {
+      return true;
+    }
+  }
+  return false;
+}
 
 // GET requests
 app.get("/urls", (req, res) => {
   const user_id = req.cookies["user_id"];
+  let templateVars = {userKey: null, urls: null, user_id: null}
   const user = users[user_id];
-  const templateVars = {urls: urlDatabase, userKey: user};
+  if (!user_id) {
+    res.render("urls_main_index", templateVars);
+  }else {
+    const urls = urlsForUser(user_id, urlDatabase);
+    templateVars = {urls, userKey: user, user_id} // no need to have (urls: ---) because the variable is already named urls
   res.render("urls_index", templateVars);  // render will respond to requests by sending back a template
+  }
 });
 
 app.get("/urls/new", (req, res) => {
@@ -82,8 +109,12 @@ app.get("/urls/new", (req, res) => {
 app.get("/urls/:shortURL", (req, res) => {  // the ":" indicates that shortURL is a route parameter
   const user_id = req.cookies["user_id"];
   const user = users[user_id];
-  const templateVars = {shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL, userKey: user};
-  res.render("urls_show", templateVars);
+  const templateVars = {shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], userKey: user};
+  if (findUserByShortUrl(user_id, urlDatabase)) {
+    res.render("urls_show", templateVars);
+  } else {
+    res.send("Access to others' URL denied!");
+  }
 });
 
 app.get("/u/:shortURL", (req, res) => {
@@ -127,16 +158,26 @@ app.post("/urls", (req, res) => {  // add a post route to receive the form submi
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
-  const shortURL = req.params.shortURL;
-  delete urlDatabase[shortURL];
-  res.redirect("/urls");
+  const user_id = req.cookies["user_id"];
+  if (findUserByShortUrl(user_id, urlDatabase)) {
+    const shortURL = req.params.shortURL;
+    delete urlDatabase[shortURL];
+    res.redirect("/urls");  
+  } else {
+    res.send("Can not delete without logging in!");
+  }
 });
 
 app.post("/urls/:id", (req, res) => {  // modifies URL
-  const newLongURL = req.body.newLongURL;
-  const id = req.params.id;
-  urlDatabase[id].longURL = newLongURL;
-  res.redirect("/urls");
+  const user_id = req.cookies["user_id"];
+  if (findUserByShortUrl(user_id, urlDatabase)) {
+    const newLongURL = req.body.newLongURL;
+    const id = req.params.id;
+    urlDatabase[id].longURL = newLongURL;
+    res.redirect("/urls");  
+  } else {
+    res.send("Can not edit without logging in!");
+  }
 });
 
 app.post("/register", (req, res) => {
