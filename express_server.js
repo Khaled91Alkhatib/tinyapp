@@ -44,54 +44,71 @@ const generateRandomString = function() {
 const findUserByEmail = function(email, users) {  // helper function used in authenticateUser function
   for (const userID in users) {
     if (users[userID].email === email) {
-      return users[userID];
+      return true;
+    }
+  }
+  return false;
+};
+
+const findUserByPassword = function(password, users) {  // helper function used in authenticateUser function
+  for (const userID in users) {
+    if (users[userID].password === password) {
+      return true;
     }
   }
   return false;
 };
 
 const authenticateUser = function(email, password, users) {  // helper function used in POST /login
+  for (const user in users) {
+    if (users[user].email === email && users[user].password === password) {
+      return users[user]; // this is for the POST login
+    }
+  }
   const userFound = findUserByEmail(email, users);
-  if (userFound && userFound.password === password) {
-    return userFound;
-  } else {
+  const passwordFound = findUserByPassword(password, users);
+  if (!userFound && !passwordFound ) {
     return false;
   }
+  if (userFound || passwordFound) {
+    return true;
+  }
+  return true;
 };
 
-const urlsForUser = function (id, uDb) { // uDb represents the database with the data already in it
+const urlsForUser = function(id, uDb) { // uDb represents the database with the data already in it
   const newObj = {};
   for (const k in uDb) {
     if (id === uDb[k].userID) {
       newObj[k] = {
         longURL: uDb[k].longURL,
         userID: uDb[k].userID
-      }
+      };
     }
   }
   return newObj;
-}
+};
 
-const findUserByShortUrl = function (id, uDb) {
+const findUserByShortUrl = function(id, uDb) {
   for (const k in uDb) {
     if (id === uDb[k].userID) {
       return true;
     }
   }
   return false;
-}
+};
 
 // GET requests
 app.get("/urls", (req, res) => {
   const user_id = req.cookies["user_id"];
-  let templateVars = {userKey: null, urls: null, user_id: null}
+  let templateVars = {userKey: null, urls: null, user_id: null};
   const user = users[user_id];
   if (!user_id) {
     res.render("urls_main_index", templateVars);
-  }else {
+  } else {
     const urls = urlsForUser(user_id, urlDatabase);
-    templateVars = {urls, userKey: user, user_id} // no need to have (urls: ---) because the variable is already named urls
-  res.render("urls_index", templateVars);  // render will respond to requests by sending back a template
+    templateVars = {urls, userKey: user, user_id}; // no need to have (urls: ---) because the variable is already named urls
+    res.render("urls_index", templateVars);  // render will respond to requests by sending back a template
   }
 });
 
@@ -162,7 +179,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   if (findUserByShortUrl(user_id, urlDatabase)) {
     const shortURL = req.params.shortURL;
     delete urlDatabase[shortURL];
-    res.redirect("/urls");  
+    res.redirect("/urls");
   } else {
     res.send("Can not delete without logging in!");
   }
@@ -174,29 +191,27 @@ app.post("/urls/:id", (req, res) => {  // modifies URL
     const newLongURL = req.body.newLongURL;
     const id = req.params.id;
     urlDatabase[id].longURL = newLongURL;
-    res.redirect("/urls");  
+    res.redirect("/urls");
   } else {
     res.send("Can not edit without logging in!");
   }
 });
 
 app.post("/register", (req, res) => {
-  const newUserID = generateRandomString();
-  const newUser = {
-    [newUserID]: {
-      id: newUserID,
-      email: req.body.email,
-      password: req.body.password
-    }
-  };
-  for (const key in users) {
-    if (users[key].email === newUser[newUserID].email) {
-      return res.status(400).send("Email already exists!");
-    } else if (newUser[newUserID].email === "" || newUser[newUserID].password === "") {
-      return res.status(400).send("Both email and password required!");
-    }
+  const {email, password} = req.body;
+  if (email === "" || password === "") {
+    return res.status(400).send("Invalid Credentials");
   }
-  Object.assign(users, newUser);
+  const authUser = authenticateUser(email, password, users);
+  if (authUser) {
+    return res.status(400).send("Invalid Credentials");
+  }
+  const newUserID = generateRandomString();
+  users[newUserID] = {
+    id: newUserID,
+    email,
+    password
+  };
   res.cookie("user_id", newUserID);
   res.redirect("/urls");
 });
@@ -205,7 +220,7 @@ app.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
   let user = authenticateUser(email, password, users);
-  if (user) {
+  if (user.email) {
     res.cookie("user_id", user.id);
     res.redirect("/urls");
   } else {
