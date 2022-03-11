@@ -1,6 +1,7 @@
 const bodyParser = require("body-parser"); // body-parser makes data sent as a buffer to be readable
 const cookieParser = require("cookie-parser");
 const express = require("express");
+const bcrypt = require("bcryptjs");
 const app = express();
 const PORT = 8080; // default port 8080
 
@@ -52,16 +53,18 @@ const findUserByEmail = function(email, users) {  // helper function used in aut
 
 const findUserByPassword = function(password, users) {  // helper function used in authenticateUser function
   for (const userID in users) {
-    if (users[userID].password === password) {
+    if (bcrypt.compareSync(password, users[userID].password)) {
       return true;
     }
   }
   return false;
 };
 
-const authenticateUser = function(email, password, users) {  // helper function used in POST /login
+const authenticateUser = function(email, password, users) {  // helper function used in POST /login and /register
   for (const user in users) {
-    if (users[user].email === email && users[user].password === password) {
+    // console.log(users[user].password, "login database password")
+    // console.log(password, "typed password")
+    if (users[user].email === email && bcrypt.compareSync(password, users[user].password)) {
       return users[user]; // this is for the POST login
     }
   }
@@ -197,6 +200,9 @@ app.post("/urls/:id", (req, res) => {  // modifies URL
 
 app.post("/register", (req, res) => {
   const {email, password} = req.body;
+  const hashedPassword = bcrypt.hashSync(password, 10);
+  // console.log(hashedPassword, "hashed")
+
   if (email === "" || password === "") {
     return res.status(400).send("Invalid Credentials");
   }
@@ -208,8 +214,9 @@ app.post("/register", (req, res) => {
   users[newUserID] = {
     id: newUserID,
     email,
-    password
+    password: hashedPassword
   };
+  // console.log(users)
   res.cookie("user_id", newUserID);
   res.redirect("/urls");
 });
@@ -217,6 +224,7 @@ app.post("/register", (req, res) => {
 app.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
+
   let user = authenticateUser(email, password, users);
   if (user.email) {
     res.cookie("user_id", user.id);
