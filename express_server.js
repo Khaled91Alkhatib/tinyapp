@@ -1,12 +1,18 @@
 const bodyParser = require("body-parser"); // body-parser makes data sent as a buffer to be readable
-const cookieParser = require("cookie-parser");
+const cookieSession = require("cookie-session");
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const app = express();
 const PORT = 8080; // default port 8080
 
 app.use(bodyParser.urlencoded({extended: true}));
-app.use(cookieParser());
+
+app.use(cookieSession({
+  name: 'session',
+  keys: ["anything_randomstring"],
+  maxAge: 24 * 60 * 60 * 1000 // represents when will the cookie expire (24 hours here)
+}))
+
 app.set("view engine", "ejs");
 
 
@@ -103,7 +109,7 @@ const findUserByShortUrl = function(id, uDb) {
 
 // GET requests
 app.get("/urls", (req, res) => {
-  const user_id = req.cookies["user_id"];
+  const user_id = req.session.user_id;
   let templateVars = {userKey: null, urls: null, user_id: null};
   const user = users[user_id];
   if (!user_id) {
@@ -116,7 +122,7 @@ app.get("/urls", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  const user_id = req.cookies["user_id"];
+  const user_id = req.session.user_id;
   if (user_id) {
     const user = users[user_id];
     const templateVars = {urls: urlDatabase, userKey: user};
@@ -127,7 +133,7 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/urls/:shortURL", (req, res) => {  // the ":" indicates that shortURL is a route parameter
-  const user_id = req.cookies["user_id"];
+  const user_id = req.session.user_id;
   const user = users[user_id];
   const templateVars = {shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], userKey: user};
   if (findUserByShortUrl(user_id, urlDatabase)) {
@@ -148,14 +154,14 @@ app.get("/u/:shortURL", (req, res) => {
 });
 
 app.get("/register", (req, res) => {
-  const user_id = req.cookies["user_id"];
+  const user_id = req.session.user_id;
   const user = users[user_id];
   const templateVars = {userKey: user};
   res.render("urls_registration", templateVars);
 });
 
 app.get("/login", (req, res) => {
-  const user_id = req.cookies["user_id"];
+  const user_id = req.session.user_id;
   const user = users[user_id];
   const templateVars = {userKey: user};
   res.render("urls_login", templateVars);
@@ -164,7 +170,7 @@ app.get("/login", (req, res) => {
 
 // POST requests
 app.post("/urls", (req, res) => {  // add a post route to receive the form submissions
-  const user_id = req.cookies["user_id"];
+  const user_id = req.session.user_id;
   const newShorturl = generateRandomString();
   urlDatabase[newShorturl] = {  // assign new key and key value
     longURL: req.body.longURL,
@@ -178,7 +184,7 @@ app.post("/urls", (req, res) => {  // add a post route to receive the form submi
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
-  const user_id = req.cookies["user_id"];
+  const user_id = req.session.user_id;
   if (findUserByShortUrl(user_id, urlDatabase)) {
     const shortURL = req.params.shortURL;
     delete urlDatabase[shortURL];
@@ -189,7 +195,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 });
 
 app.post("/urls/:id", (req, res) => {  // modifies URL
-  const user_id = req.cookies["user_id"];
+  const user_id = req.session.user_id;
   if (findUserByShortUrl(user_id, urlDatabase)) {
     const newLongURL = req.body.newLongURL;
     const id = req.params.id;
@@ -217,7 +223,8 @@ app.post("/register", (req, res) => {
     password: hashedPassword
   };
   // console.log(users)
-  res.cookie("user_id", newUserID);
+  // res.cookie("user_id", newUserID);
+  req.session.user_id = newUserID;
   res.redirect("/urls");
 });
 
@@ -227,7 +234,8 @@ app.post("/login", (req, res) => {
 
   let user = authenticateUser(email, password, users);
   if (user.email) {
-    res.cookie("user_id", user.id);
+    // res.cookie("user_id", user.id);
+    req.session.user_id = user.id;
     res.redirect("/urls");
   } else {
     res.status(403).send("Email or password is incorrect");
@@ -235,7 +243,7 @@ app.post("/login", (req, res) => {
 });
 
 app.post("/logout", (req, res) => {
-  res.clearCookie("user_id");
+  req.session = null;
   res.redirect("/urls");
 });
 
