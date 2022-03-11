@@ -192,8 +192,6 @@ app.post("/urls/:id", (req, res) => {  // modifies URL
     const id = req.params.id;
     urlDatabase[id].longURL = newLongURL;
     res.redirect("/urls");
-  } else {
-    res.send("Can not edit without logging in!");
   }
 });
 
