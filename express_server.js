@@ -30,12 +30,12 @@ const users = {
   "userRandomID": {
     id: "userRandomID",
     email: "user@example.com",
-    password: "purple-monkey-dinosaur"
+    password: bcrypt.hashSync("purple-monkey-dinosaur")
   },
   "user2RandomID": {
     id: "user2RandomID",
     email: "user2@example.com",
-    password: "dishwasher-funk"
+    password: bcrypt.hashSync("dishwasher-funk")
   }
 };
 
@@ -45,7 +45,7 @@ app.get("/urls", (req, res) => {
   let templateVars = {userKey: null, urls: null, user_id: null};
   const user = users[user_id];
   if (!user_id) {
-    res.render("urls_main_index", templateVars);
+    res.render("urls_main_index", templateVars); // when user is not logged in
   } else {
     const urls = urlsForUser(user_id, urlDatabase);
     templateVars = {urls, userKey: user, user_id}; // no need to have (urls: ---) because the variable is already named urls
