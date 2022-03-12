@@ -39,7 +39,7 @@ const generateRandomString = function() {
   return newString;
 };
 
-const urlsForUser = function(id, uDb) { // uDb represents the database with the data already in it
+const urlsForUser = function(id, uDb) { // helper function that gives the user access to their created URL's
   const newObj = {};
   for (const k in uDb) {
     if (id === uDb[k].userID) {
